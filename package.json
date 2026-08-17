@@ -25,6 +25,6 @@
     "@types/react-dom": "latest",
     "postcss": "latest",
     "tailwindcss": "latest",
-    "typescript": "7.0.2"
+    "typescript": "^5.9.3"
   }
 }
