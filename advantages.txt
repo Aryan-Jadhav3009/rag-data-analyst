@@ -1,0 +1,182 @@
+1. sql injection proof
+2. retrieval metadata
+3. Transformer
+4. atmoic operatoins on database
+                    USER
+                      │
+                      ▼
+               Natural-language
+                   question
+                      │
+             ┌────────┴────────┐
+             ▼                 ▼
+       Vector search          BM25
+             │                 │
+             └────────┬────────┘
+                      ▼
+                     RRF
+                      │
+                      ▼
+              Relevant schema
+                   context
+                      │
+                      ▼
+                  GEMINI
+              (one main call)
+                      │
+                      ▼
+                 Generated SQL
+                      │
+                      ▼
+              SQL validation
+                      │
+                      ▼
+                PostgreSQL
+                      │
+                      ▼
+                 Query result
+                      │
+                      ▼
+             Deterministic/basic
+                 formatting
+                      │
+                      ▼
+                    USER
+
+
+                    Our vector retriever does this:
+
+                              query
+                              ↓
+                              embedding
+                              ↓
+                              PostgreSQL
+                              ↓
+                              distance calculation
+
+                              Our BM25 retriever does something different:
+
+                              RAG documents
+                              ↓
+                              tokenize
+                              ↓
+                              build BM25 index
+                              ↓
+                              query
+                              ↓
+                              BM25 scores
+                              ↓
+                              ranking
+
+
+5. recall metrci over precisoin for rag
+6. nstead of saying:
+
+"I implemented hybrid RAG."
+
+you'll eventually be able to say something like:
+
+"I implemented dense retrieval with Sentence Transformers and pgvector, lexical retrieval with BM25, fused rankings using RRF, and evaluated schema retrieval using Recall@K and MRR."
+11. Our architecture is getting much stronger
+
+We're now at:
+
+                         USER
+                          │
+                          ▼
+                   Hybrid Retrieval
+                    /           \
+                pgvector       BM25
+                    \           /
+                         RRF
+                          │
+                          ▼
+                   Schema Context
+                          │
+                          ▼
+                       LangChain
+                          │
+                          ▼
+                        Gemini
+                          │
+                          ▼
+               Structured SQL Result
+                          │
+                          ▼
+                    SQL Validator
+                          │
+                   ┌──────┴──────┐
+                   │             │
+                 valid         invalid
+                   │             │
+                   ▼             ▼
+              PostgreSQL      reject
+
+                                       ┌───────────────┐
+                         │     User      │
+                         └───────┬───────┘
+                                 │
+                                 ▼
+                         Natural language
+                                 │
+                                 ▼
+                    ┌─────────────────────┐
+                    │   Hybrid Retriever  │
+                    │                     │
+                    │ Vector + BM25 + RRF │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                         Schema Context
+                               │
+                               ▼
+                         ┌───────────┐
+                         │  Gemini   │
+                         └─────┬─────┘
+                               │
+                               ▼
+                       Structured SQL
+                               │
+                               ▼
+                       ┌────────────┐
+                       │ SQLGlot    │
+                       │ Validator  │
+                       └─────┬──────┘
+                             │
+                          valid
+                             │
+                             ▼
+                       ┌────────────┐
+                       │ PostgreSQL │
+                       └─────┬──────┘
+                             │
+                             ▼
+                        Query Result
+                    
+                   ex workflow: 
+                    
+                    POST /api/databases/
+                         ↓
+                    DatabaseConnection created
+                         ↓
+                    PostgreSQL connection tested
+                         ↓
+                    Schema introspected
+                         ↓
+                    5 RAG documents created
+                         ↓
+                    Embeddings generated
+                         ↓
+                    Documents associated with that database
+                         ↓
+                    POST /api/query/
+                         ↓
+                    Database-specific retrieval
+                         ↓
+                    Gemini generates SQL
+                         ↓
+                    SQL validation
+                         ↓
+                    PostgreSQL execution
+                         ↓
+                    4 customers
